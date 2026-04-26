@@ -171,8 +171,8 @@ if(!$tw.Bob.Shared) {
         // If we are in the browser there is only one connection, but
         // everything here is the same.
         const targetConnections = $tw.node?(messageData.wiki?Object.values($tw.connections).filter(function(item) {
-          return item.wiki === messageData.wiki && !messageData.ack[item.socket.index].received
-        }):[]):[Object.values($tw.connections)[0]].filter(function(item){!messageData.ack[item.socket.index]});
+          return item.wiki === messageData.wiki && messageData.ack[item.sessionId] && !messageData.ack[item.sessionId].received
+        }):[]):[Object.values($tw.connections)[0]].filter(function(item){ return messageData.ack[item.sessionId] && !messageData.ack[item.sessionId].received; });
         targetConnections.forEach(function(connection) {
           _sendMessage(connection, messageData)
         });
@@ -195,7 +195,7 @@ if(!$tw.Bob.Shared) {
     // Here make sure that the connection is live and hasn't already
     // sent an ack for the current message.
     if(connection.socket !== undefined) {
-      if(!messageData.ack[index].received && connection.socket.readyState === 1) {
+      if(messageData.ack[index] && !messageData.ack[index].received && connection.socket.readyState === 1) {
         messageData.ack[index].tries += 1
         connection.socket.send(JSON.stringify(messageData.message), function ack(err) {
           if(err) {
@@ -531,6 +531,9 @@ if(!$tw.Bob.Shared) {
       if($tw.browser) {
         // The source connection is always 0 in the browser
         data.source_connection = 0;
+      } else if(!data.source_connection && data.sessionId) {
+        // Server: ack from browser includes sessionId, use it to match the ack key
+        data.source_connection = data.sessionId;
       }
       const index = $tw.Bob.MessageQueue.findIndex(function(messageData) {
         return messageData.id === data.id;
