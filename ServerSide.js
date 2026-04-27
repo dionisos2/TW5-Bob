@@ -702,7 +702,7 @@ $tw.Bob.UpdateHistory = function(message) {
 $tw.Bob.SendToBrowsers = function (message, excludeConnection) {
   $tw.Bob.UpdateHistory(message);
   Object.values($tw.connections).forEach(function (connection, ind) {
-    if((ind !== excludeConnection) && connection.socket) {
+    if((connection.sessionId !== excludeConnection) && connection.socket) {
       if(connection.socket.readyState === 1 && (connection.wiki === message.wiki || !message.wiki)) {
         const thisMessage = JSON.parse(JSON.stringify(message));
         thisMessage.wiki = connection.wiki;

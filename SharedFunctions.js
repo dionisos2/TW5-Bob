@@ -161,7 +161,7 @@ if(!$tw.Bob.Shared) {
       // not received the acks expected.
       // These are assumed to have been lost and need to be resent
       const oldMessages = $tw.Bob.MessageQueue.filter(function(messageData) {
-        if((Date.now() - messageData.time > $tw.settings.advanced.localMessageQueueTimeout || 500) && !messageData.ctime) {
+        if((Date.now() - messageData.time > ($tw.settings.advanced.localMessageQueueTimeout || 500)) && !messageData.ctime) {
           return true;
         } else {
           return false;

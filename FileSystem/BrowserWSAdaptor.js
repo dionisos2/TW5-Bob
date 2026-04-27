@@ -775,9 +775,13 @@ BrowserWSAdaptor.prototype.saveTiddler = function (tiddler, callback) {
     const id = $tw.syncadaptor.sendToServer(message, callback);
     if(id) {
       this.idList.push(id)
-      $tw.rootWidget.addEventListener('handle-ack', function(e) {
-        handleAck(e.detail)
-      }, {once: true})
+      // TW's Widget.prototype.addEventListener ignores {once:true}, so we
+      // manually remove the listener after first call to prevent accumulation.
+      const listener = function(e) {
+        $tw.rootWidget.removeEventListener('handle-ack', listener);
+        handleAck(e.detail);
+      };
+      $tw.rootWidget.addEventListener('handle-ack', listener);
     }
   }
 }
@@ -815,9 +819,11 @@ BrowserWSAdaptor.prototype.saveTiddlers = function (tiddlers, callback) {
   const id = $tw.syncadaptor.sendToServer(message, callback);
   if(id) {
     this.idList.push(id);
-    $tw.rootWidget.addEventListener('handle-ack', function(e) {
+    const listener = function(e) {
+      $tw.rootWidget.removeEventListener('handle-ack', listener);
       handleAck(e.detail);
-    }, {once: true})
+    };
+    $tw.rootWidget.addEventListener('handle-ack', listener);
   }
 }
 
@@ -837,9 +843,11 @@ BrowserWSAdaptor.prototype.loadTiddler = function (title, callback) {
       wiki: $tw.wikiName
     }
     const id = $tw.syncadaptor.sendToServer(message)
-    $tw.rootWidget.addEventListener('loaded-tiddler', function(e) {
-      handleLoadedTiddler(e.detail)
-    }, {once: true})
+    const listener = function(e) {
+      $tw.rootWidget.removeEventListener('loaded-tiddler', listener);
+      handleLoadedTiddler(e.detail);
+    };
+    $tw.rootWidget.addEventListener('loaded-tiddler', listener);
   }
 }
 
@@ -855,9 +863,11 @@ BrowserWSAdaptor.prototype.loadExternalTiddler = function(title, wiki, callback)
     wiki: wiki
   }
   const id = $tw.syncadaptor.sendToServer(message)
-  $tw.rootWidget.addEventListener('loaded-tiddler', function(e) {
-    handleLoadedTiddler(e.detail, wiki)
-  }, {once: true})
+  const listener = function(e) {
+    $tw.rootWidget.removeEventListener('loaded-tiddler', listener);
+    handleLoadedTiddler(e.detail, wiki);
+  };
+  $tw.rootWidget.addEventListener('loaded-tiddler', listener);
 }
 
 // Load external tiddlers using a filter
@@ -871,9 +881,11 @@ BrowserWSAdaptor.prototype.loadExternalTiddlers = function(filter, wiki, callbac
     wiki: wiki
   }
   const id = $tw.syncadaptor.sendToServer(message)
-  $tw.rootWidget.addEventListener('loaded-tiddlers', function(e) {
-    handleLoadedTiddlers(e.detail, wiki)
-  }, {once: true})
+  const listener = function(e) {
+    $tw.rootWidget.removeEventListener('loaded-tiddlers', listener);
+    handleLoadedTiddlers(e.detail, wiki);
+  };
+  $tw.rootWidget.addEventListener('loaded-tiddlers', listener);
 }
 
 // REQUIRED
@@ -905,9 +917,11 @@ BrowserWSAdaptor.prototype.deleteTiddler = function (title, callback, options) {
     };
     const id = $tw.syncadaptor.sendToServer(message);
     this.idList.push(id)
-    $tw.rootWidget.addEventListener('handle-ack', function(e) {
-      handleAck(e.detail)
-    }, {once: true})
+    const listener = function(e) {
+      $tw.rootWidget.removeEventListener('handle-ack', listener);
+      handleAck(e.detail);
+    };
+    $tw.rootWidget.addEventListener('handle-ack', listener);
   }
 }
 
@@ -1000,9 +1014,11 @@ function setupSkinnyTiddlerLoading() {
               if($tw.connections) {
                 if($tw.connections[0].socket.readyState === 1) {
                   id = $tw.syncadaptor.sendToServer(message)
-                  $tw.rootWidget.addEventListener('skinny-tiddlers', function(e) {
-                    handleSkinnyTiddlers(e.detail)
-                  }, {once: true})
+                  const listenerA = function(e) {
+                    $tw.rootWidget.removeEventListener('skinny-tiddlers', listenerA);
+                    handleSkinnyTiddlers(e.detail);
+                  };
+                  $tw.rootWidget.addEventListener('skinny-tiddlers', listenerA);
                 } else {
                   setSendThingTimeout()
                 }
@@ -1014,9 +1030,11 @@ function setupSkinnyTiddlerLoading() {
           if($tw.connections) {
             if($tw.connections[0].socket.readyState === 1) {
               id = $tw.syncadaptor.sendToServer(message)
-              $tw.rootWidget.addEventListener('skinny-tiddlers', function(e) {
-                handleSkinnyTiddlers(e.detail)
-              }, {once: true})
+              const listenerB = function(e) {
+                $tw.rootWidget.removeEventListener('skinny-tiddlers', listenerB);
+                handleSkinnyTiddlers(e.detail);
+              };
+              $tw.rootWidget.addEventListener('skinny-tiddlers', listenerB);
             } else {
               setSendThingTimeout()
             }
